@@ -1,24 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DEFAULT_SHIFT_TIMES, SHIFT_TYPE_LABELS, SHIFT_TYPES } from "@/lib/shiftConstants";
+import { SHIFT_TYPE_LABELS, SHIFT_TYPES } from "@/lib/shiftConstants";
+import { getTemplateTimes } from "@/lib/shiftTemplates";
 import {
   createShiftId,
   formatLongDate,
-  getDefaultTimes,
   inferEndsNextDay,
 } from "@/lib/shiftUtils";
 import type { ShiftRecord, ShiftType } from "@/types/shift";
+import type { ShiftTemplates } from "@/types/shiftTemplate";
 
 interface ShiftEditorProps {
   date: string;
   existingShift: ShiftRecord | null;
+  templates: ShiftTemplates;
   onClose: () => void;
   onSave: (shift: ShiftRecord) => void;
   onDelete: (shiftId: string) => void;
 }
 
-function getInitialValues(existingShift: ShiftRecord | null) {
+function getInitialValues(
+  existingShift: ShiftRecord | null,
+  templates: ShiftTemplates,
+) {
   if (existingShift) {
     return {
       type: existingShift.type,
@@ -28,7 +33,7 @@ function getInitialValues(existingShift: ShiftRecord | null) {
     };
   }
 
-  const times = getDefaultTimes("day");
+  const times = getTemplateTimes("day", templates);
   return {
     type: "day" as ShiftType,
     startTime: times.startTime ?? "",
@@ -40,11 +45,12 @@ function getInitialValues(existingShift: ShiftRecord | null) {
 export default function ShiftEditor({
   date,
   existingShift,
+  templates,
   onClose,
   onSave,
   onDelete,
 }: ShiftEditorProps) {
-  const initialValues = getInitialValues(existingShift);
+  const initialValues = getInitialValues(existingShift, templates);
   const [type, setType] = useState<ShiftType>(initialValues.type);
   const [startTime, setStartTime] = useState(initialValues.startTime);
   const [endTime, setEndTime] = useState(initialValues.endTime);
@@ -65,17 +71,9 @@ export default function ShiftEditor({
 
   function handleTypeChange(nextType: ShiftType) {
     setType(nextType);
-    const standardTimes = DEFAULT_SHIFT_TIMES[nextType];
-    if (standardTimes) {
-      setStartTime(standardTimes.startTime);
-      setEndTime(standardTimes.endTime);
-    } else if (nextType === "off" || nextType === "paidLeave" || nextType === "postNight") {
-      setStartTime("");
-      setEndTime("");
-    } else {
-      setStartTime("");
-      setEndTime("");
-    }
+    const templateTimes = getTemplateTimes(nextType, templates);
+    setStartTime(templateTimes.startTime ?? "");
+    setEndTime(templateTimes.endTime ?? "");
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {

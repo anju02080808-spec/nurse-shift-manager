@@ -10,6 +10,8 @@
 - 夜勤などの日付またぎ表示
 - 次回勤務の表示
 - 今月の勤務区分別サマリー
+- 表示中の月をUTF-8 BOM付きCSVとして出力
+- 日勤・夜勤・早出・遅出の標準時刻をユーザー設定
 - デモ勤務の追加と、確認付きの全勤務削除
 - 壊れた保存データや`localStorage`が使えない環境への安全なフォールバック
 
@@ -55,7 +57,7 @@ fnm exec --using 24 npm run build -- --webpack
 
 ## データ保存方式
 
-保存キーは`nurse-shift-manager:shifts:v1`です。保存形式は次のバージョン付きJSONです。
+勤務データの保存キーは`nurse-shift-manager:shifts:v1`です。保存形式は次のバージョン付きJSONです。
 
 ```ts
 interface ShiftStorage {
@@ -64,21 +66,23 @@ interface ShiftStorage {
 }
 ```
 
-日付は`YYYY-MM-DD`、時刻は`HH:mm`で管理します。保存処理は`src/lib/storage.ts`、勤務ロジックは`src/lib/shiftUtils.ts`に分離しています。
+勤務テンプレートは別のキー`nurse-shift-manager:shift-templates:v1`へ保存します。テンプレートを変更しても登録済み勤務は書き換えず、新規登録時の初期時刻だけに反映します。
+
+日付は`YYYY-MM-DD`、時刻は`HH:mm`で管理します。勤務保存処理は`src/lib/storage.ts`、テンプレート保存処理は`src/lib/shiftTemplateStorage.ts`、勤務ロジックは`src/lib/shiftUtils.ts`に分離しています。
+
+CSVは表示中の月の勤務を対象に、UTF-8 BOMとCRLF改行を使用して出力します。CSV文字列生成とブラウザのダウンロード処理は別モジュールです。
 
 ## Phase 1の制限
 
 - ログイン、ユーザー管理、クラウド同期はありません
 - データは端末・ブラウザごとに保存されます
-- 給与計算、夜勤手当計算、CSV出力はありません
+- 給与計算、夜勤手当計算はありません
 - 1日につき1勤務を基本としています
 
 ## 今後のPhase 2構想
 
 - Supabaseへのデータ移行
 - ユーザー認証とクラウド同期
-- 勤務テンプレート設定
 - 給与・夜勤手当計算
-- CSV出力
 - PWA対応
 - 複数端末同期
