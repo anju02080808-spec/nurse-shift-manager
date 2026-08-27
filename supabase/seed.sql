@@ -1,0 +1,2 @@
+-- Intentionally empty. Test users and records are created inside transactional
+-- pgTAP tests so development resets never create application data implicitly.

@@ -1,6 +1,6 @@
 # Nurse Shift Manager
 
-看護師がスマートフォンから自分の勤務表を登録・確認できる、Phase 1のWebアプリです。ログインやクラウド同期は行わず、ブラウザの`localStorage`に勤務データを保存します。
+看護師がスマートフォンから自分の勤務表を登録・確認できるWebアプリです。現在の画面はブラウザの`localStorage`へ保存する端末内モードで動作し、Phase 2の認証・クラウド同期基盤を段階的に追加しています。
 
 ## 主な機能
 
@@ -21,6 +21,7 @@
 - TypeScript
 - CSS（Tailwind CSSのリセットを利用し、画面スタイルは`globals.css`に定義）
 - Vitest
+- Supabase（Phase 2基盤。認証UIとクラウド同期は実装途中）
 - Node.js 24.19.0
 
 ## セットアップ
@@ -79,7 +80,22 @@ CSVは表示中の月の勤務を対象に、UTF-8 BOMとCRLF改行を使用し�
 - 給与計算、夜勤手当計算はありません
 - 1日につき1勤務を基本としています
 
-## 今後のPhase 2構想
+## Phase 2開発環境
+
+Supabaseを設定していない環境でも、端末内モードの起動、テスト、buildは可能です。クラウド機能を開発する場合は`.env.example`を参考に、公開可能なProject URLとPublishable keyを`.env.local`へ設定します。Secret key、legacy `service_role`、DBパスワードはアプリへ設定しません。
+
+ローカルDBを利用する場合は、Supabase CLIに加えてDocker互換環境が必要です。
+
+```bash
+fnm exec --using 24 npm run supabase:start
+fnm exec --using 24 npm run supabase:reset
+fnm exec --using 24 npm run supabase:test
+fnm exec --using 24 npm run supabase:lint
+```
+
+DBスキーマ、制約、RLSポリシーは`supabase/migrations`を正本とします。Dashboardで先にテーブルを手作業作成しないでください。
+
+## Phase 2構想
 
 - Supabaseへのデータ移行
 - ユーザー認証とクラウド同期
