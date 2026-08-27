@@ -7,13 +7,7 @@ import MonthlySummary from "@/components/MonthlySummary";
 import NextShift from "@/components/NextShift";
 import ShiftEditor from "@/components/ShiftEditor";
 import ShiftTemplateSettings from "@/components/ShiftTemplateSettings";
-import {
-  loadShiftTemplates,
-  resetShiftTemplates,
-  saveShiftTemplates,
-} from "@/lib/shiftTemplateStorage";
 import { createDefaultShiftTemplates } from "@/lib/shiftTemplates";
-import { clearShifts, loadShifts, saveShifts } from "@/lib/storage";
 import {
   addMonths,
   createShiftRecord,
@@ -24,10 +18,16 @@ import {
   getMonthlySummary,
   getTodayKey,
 } from "@/lib/shiftUtils";
+import { LocalShiftRepository } from "@/repositories/localShiftRepository";
+import { LocalShiftTemplateRepository } from "@/repositories/localShiftTemplateRepository";
 import type { ShiftRecord } from "@/types/shift";
 import type { ShiftTemplates } from "@/types/shiftTemplate";
 
 export default function ShiftManager() {
+  const [shiftRepository] = useState(() => new LocalShiftRepository());
+  const [shiftTemplateRepository] = useState(
+    () => new LocalShiftTemplateRepository(),
+  );
   const [currentMonth, setCurrentMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
   );
@@ -42,14 +42,25 @@ export default function ShiftManager() {
   const [toolMessage, setToolMessage] = useState("");
 
   useEffect(() => {
-    const load = () => {
-      setShifts(loadShifts());
-      setShiftTemplates(loadShiftTemplates());
-      setIsHydrated(true);
+    let isCancelled = false;
+    const load = async () => {
+      const [loadedShifts, loadedTemplates] = await Promise.all([
+        shiftRepository.list(),
+        shiftTemplateRepository.load(),
+      ]);
+
+      if (!isCancelled) {
+        setShifts(loadedShifts);
+        setShiftTemplates(loadedTemplates);
+        setIsHydrated(true);
+      }
     };
-    const timer = window.setTimeout(load, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => {
+      isCancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [shiftRepository, shiftTemplateRepository]);
 
   const selectedShift = selectedDate
     ? shifts.find((shift) => shift.date === selectedDate) ?? null
@@ -64,29 +75,26 @@ export default function ShiftManager() {
     [shifts],
   );
 
-  function updateShifts(nextShifts: ShiftRecord[]) {
-    setShifts(nextShifts);
-    setStorageWarning(!saveShifts(nextShifts));
-  }
-
-  function handleSave(shift: ShiftRecord) {
+  async function handleSave(shift: ShiftRecord) {
     const nextShifts = shifts.some((item) => item.id === shift.id)
       ? shifts.map((item) => (item.id === shift.id ? shift : item))
       : [...shifts, shift];
-    updateShifts(nextShifts);
+    setShifts(nextShifts);
+    setStorageWarning(!(await shiftRepository.upsert(shift)));
     setSelectedDate(null);
   }
 
-  function handleDelete(shiftId: string) {
+  async function handleDelete(shiftId: string) {
     if (!window.confirm("この勤務を削除しますか？")) {
       return;
     }
 
-    updateShifts(shifts.filter((shift) => shift.id !== shiftId));
+    setShifts(shifts.filter((shift) => shift.id !== shiftId));
+    setStorageWarning(!(await shiftRepository.remove(shiftId)));
     setSelectedDate(null);
   }
 
-  function handleAddDemo() {
+  async function handleAddDemo() {
     const existingDates = new Set(shifts.map((shift) => shift.date));
     const demoDefinitions = [
       { day: 1, type: "day" as const },
@@ -103,22 +111,23 @@ export default function ShiftManager() {
       .filter((shift) => !existingDates.has(shift.date));
 
     if (demoShifts.length > 0) {
-      updateShifts([...shifts, ...demoShifts]);
+      setShifts([...shifts, ...demoShifts]);
+      setStorageWarning(!(await shiftRepository.upsertMany(demoShifts)));
     }
   }
 
-  function handleClearAll() {
+  async function handleClearAll() {
     if (!window.confirm("すべての勤務を削除しますか？この操作は元に戻せません。")) {
       return;
     }
 
-    const didClear = clearShifts();
+    const didClear = await shiftRepository.clear();
     setShifts([]);
     setStorageWarning(!didClear);
   }
 
-  function handleSaveTemplates(templates: ShiftTemplates) {
-    const didSave = saveShiftTemplates(templates);
+  async function handleSaveTemplates(templates: ShiftTemplates) {
+    const didSave = await shiftTemplateRepository.save(templates);
     setShiftTemplates(templates);
     setStorageWarning(!didSave);
     setToolMessage(
@@ -129,14 +138,14 @@ export default function ShiftManager() {
     setIsTemplateSettingsOpen(false);
   }
 
-  function handleResetTemplates() {
+  async function handleResetTemplates() {
     if (!window.confirm("勤務テンプレートを標準時刻に戻しますか？")) {
       return;
     }
 
-    const defaults = createDefaultShiftTemplates();
-    const didReset = resetShiftTemplates();
-    setShiftTemplates(defaults);
+    const defaults = await shiftTemplateRepository.reset();
+    const didReset = defaults !== null;
+    setShiftTemplates(defaults ?? createDefaultShiftTemplates());
     setStorageWarning(!didReset);
     setToolMessage(
       didReset
