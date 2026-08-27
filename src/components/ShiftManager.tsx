@@ -58,6 +58,7 @@ export default function ShiftManager() {
   const [supabaseClient] = useState(createSupabaseClient);
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(() => Boolean(supabaseClient));
+  const [isClientReady, setIsClientReady] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(
     () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -126,6 +127,11 @@ export default function ShiftManager() {
     setIsHydrated(true);
     return warning.length === 0;
   }, [shiftRepository, shiftTemplateRepository]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setIsClientReady(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (!supabaseClient) {
@@ -504,9 +510,9 @@ export default function ShiftManager() {
       </header>
 
       <AccountStatus
-        authLoading={authLoading}
+        authLoading={!isClientReady || authLoading}
         canMigrate={Boolean(userId && hasLocalMigrationData)}
-        cloudConfigured={Boolean(supabaseClient)}
+        cloudConfigured={isClientReady && Boolean(supabaseClient)}
         email={user?.email ?? null}
         isRefreshing={isRefreshing}
         onLogin={() => setIsAuthOpen(true)}
