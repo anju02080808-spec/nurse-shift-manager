@@ -6,4 +6,5 @@ export interface ShiftRepository {
   upsertMany(shifts: ShiftRecord[]): Promise<boolean>;
   remove(shiftId: string): Promise<boolean>;
   clear(): Promise<boolean>;
+  getLastError?(): string | null;
 }

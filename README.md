@@ -1,6 +1,6 @@
 # Nurse Shift Manager
 
-看護師がスマートフォンから自分の勤務表を登録・確認できるWebアプリです。現在の画面はブラウザの`localStorage`へ保存する端末内モードで動作し、Phase 2の認証・クラウド同期基盤を段階的に追加しています。
+看護師がスマートフォンから自分の勤務表を登録・確認できるWebアプリです。未ログイン時はブラウザ内だけに保存する端末内モード、ログイン時はSupabaseへ保存するクラウドモードで動作します。
 
 ## 主な機能
 
@@ -12,6 +12,10 @@
 - 今月の勤務区分別サマリー
 - 表示中の月をUTF-8 BOM付きCSVとして出力
 - 日勤・夜勤・早出・遅出の標準時刻をユーザー設定
+- メールアドレスとパスワードによる新規登録・ログイン・ログアウト
+- ユーザーごとに分離された勤務・テンプレートのクラウド保存
+- 端末内データを確認付きでクラウドへコピー（競合時の優先データを選択可能）
+- クラウドデータの手動再読込と通信エラー表示
 - デモ勤務の追加と、確認付きの全勤務削除
 - 壊れた保存データや`localStorage`が使えない環境への安全なフォールバック
 
@@ -21,7 +25,7 @@
 - TypeScript
 - CSS（Tailwind CSSのリセットを利用し、画面スタイルは`globals.css`に定義）
 - Vitest
-- Supabase（Phase 2基盤。認証UIとクラウド同期は実装途中）
+- Supabase Auth / PostgreSQL / Row Level Security
 - Node.js 24.19.0
 
 ## セットアップ
@@ -58,6 +62,8 @@ fnm exec --using 24 npm run build -- --webpack
 
 ## データ保存方式
 
+### 端末内モード
+
 勤務データの保存キーは`nurse-shift-manager:shifts:v1`です。保存形式は次のバージョン付きJSONです。
 
 ```ts
@@ -73,16 +79,35 @@ interface ShiftStorage {
 
 CSVは表示中の月の勤務を対象に、UTF-8 BOMとCRLF改行を使用して出力します。CSV文字列生成とブラウザのダウンロード処理は別モジュールです。
 
-## Phase 1の制限
+### クラウドモード
 
-- ログイン、ユーザー管理、クラウド同期はありません
-- データは端末・ブラウザごとに保存されます
+ログイン中は勤務を`public.shifts`、勤務テンプレートを`public.shift_templates`へ保存します。両テーブルは`auth.users.id`に紐づき、Row Level Security（RLS）により本人の行だけをSELECT・INSERT・UPDATE・DELETEできます。ブラウザにはPublishable keyだけを設定し、Secret key、legacy `service_role` key、DBパスワードは含めません。
+
+端末内データのクラウド移行は自動実行しません。ログイン後に件数と競合を確認し、「クラウドを優先」または「端末を優先」を選んでコピーします。コピー後も端末内データは削除しません。
+
+## 現在の制限
+
 - 給与計算、夜勤手当計算はありません
 - 1日につき1勤務を基本としています
+- オフライン中のクラウド編集キューと自動再送はありません
+- Googleログイン、リアルタイム同期、複数ユーザー共同編集はありません
+- 端末内モードとクラウドモードは別データとして保持されます
 
-## Phase 2開発環境
+## Supabase開発環境
 
-Supabaseを設定していない環境でも、端末内モードの起動、テスト、buildは可能です。クラウド機能を開発する場合は`.env.example`を参考に、公開可能なProject URLとPublishable keyを`.env.local`へ設定します。Secret key、legacy `service_role`、DBパスワードはアプリへ設定しません。
+Supabaseを設定していない環境でも、端末内モードの起動、テスト、buildは可能です。クラウド機能を使う場合は`.env.example`をコピーして、公開可能なProject URL、Publishable key、アプリURLを`.env.local`へ設定します。
+
+```bash
+cp .env.example .env.local
+```
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+```
+
+Supabase DashboardのAuthenticationでメール認証を有効にし、Site URLを`http://localhost:3000`、Redirect URLを`http://localhost:3000/auth/callback`に設定します。本番では両方をHTTPSの公開URLへ変更・追加してください。Secret key、legacy `service_role` key、DBパスワードはアプリへ設定しません。
 
 ローカルDBを利用する場合は、Supabase CLIに加えてDocker互換環境が必要です。
 
@@ -95,10 +120,15 @@ fnm exec --using 24 npm run supabase:lint
 
 DBスキーマ、制約、RLSポリシーは`supabase/migrations`を正本とします。Dashboardで先にテーブルを手作業作成しないでください。
 
-## Phase 2構想
+## Vercelへデプロイする場合
 
-- Supabaseへのデータ移行
-- ユーザー認証とクラウド同期
+VercelのProject Settings > Environment Variablesへ、`.env.local`と同じ3変数を登録します。`NEXT_PUBLIC_SITE_URL`はVercelの本番URLにします。Supabase側にも同じ本番URLと`/auth/callback`を許可URLとして追加してください。秘密鍵はVercelにも不要です。
+
+## 今後の構想
+
+- Googleログイン
+- オフライン編集キューと自動再同期
+- クラウドデータのリアルタイム更新
 - 給与・夜勤手当計算
+- CSVインポート
 - PWA対応
-- 複数端末同期

@@ -9,6 +9,12 @@ type PublicEnvironment = {
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
 };
 
+const publicEnvironment: PublicEnvironment = {
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+};
+
 function isHttpUrl(value: string): boolean {
   try {
     const url = new URL(value);
@@ -44,7 +50,7 @@ function hasServiceRoleClaim(key: string): boolean {
 }
 
 export function getSupabasePublicConfig(
-  environment: PublicEnvironment = process.env,
+  environment: PublicEnvironment = publicEnvironment,
 ): SupabasePublicConfig | null {
   const url = environment.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
   const publishableKey =
