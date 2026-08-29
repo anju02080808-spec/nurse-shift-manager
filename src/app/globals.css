@@ -54,6 +54,106 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+.offline-banner {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #9c5d16;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.offline-banner span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  font-size: 11px;
+}
+
+.install-card {
+  position: fixed;
+  z-index: 9;
+  right: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  display: grid;
+  width: min(410px, calc(100vw - 28px));
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid #b9ddd8;
+  border-radius: 17px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 18px 55px rgba(23, 62, 85, 0.22);
+}
+
+.install-card-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.install-card-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.install-card-copy strong {
+  color: var(--navy);
+  font-size: 12px;
+}
+
+.install-card-copy span {
+  color: var(--ink-soft);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.install-button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 10px;
+  padding: 0 12px;
+  background: var(--teal);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.install-dismiss {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 9px;
+  background: #f1f5f5;
+  color: var(--ink-soft);
+  font-size: 19px;
+}
+
 .app-shell {
   width: min(100%, 1080px);
   margin: 0 auto;
@@ -1251,6 +1351,22 @@ textarea:focus-visible {
 }
 
 @media (max-width: 680px) {
+  .install-card {
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .install-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .install-dismiss {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
   .app-shell {
     padding: 20px 14px 32px;
   }

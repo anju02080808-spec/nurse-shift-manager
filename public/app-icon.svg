@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Nurse Shift Manager">
+  <rect width="512" height="512" fill="#173e55"/>
+  <circle cx="402" cy="110" r="112" fill="#198d86" opacity="0.9"/>
+  <circle cx="92" cy="430" r="104" fill="#2db4aa" opacity="0.22"/>
+  <rect x="62" y="62" width="388" height="388" rx="116" fill="#ffffff" opacity="0.09"/>
+  <rect x="63" y="63" width="386" height="386" rx="115" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.22"/>
+  <text x="256" y="303" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="154" font-weight="800" letter-spacing="6" text-anchor="middle">NS</text>
+  <path d="M178 349h156" stroke="#8fe0d8" stroke-width="14" stroke-linecap="round"/>
+</svg>
