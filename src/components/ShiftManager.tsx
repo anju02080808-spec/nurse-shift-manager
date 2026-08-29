@@ -27,12 +27,18 @@ import {
   hasCompletedCloudMigration,
   markCloudMigrationCompleted,
 } from "@/lib/cloudMigrationStorage";
+import {
+  applyShiftChanges,
+  planNightShiftDeletion,
+  planNightShiftSave,
+} from "@/lib/nightShiftAutomation";
 import { createDefaultShiftTemplates } from "@/lib/shiftTemplates";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
   addMonths,
   createShiftRecord,
   findNextShift,
+  formatLongDate,
   formatMonthTitle,
   getCalendarDays,
   getMonthKey,
@@ -264,7 +270,10 @@ export default function ShiftManager() {
   );
 
   async function handleSave(shift: ShiftRecord) {
-    const didSave = await shiftRepository.upsert(shift);
+    const savePlan = planNightShiftSave(shifts, selectedShift, shift);
+    const didSave = await shiftRepository.upsertMany(
+      savePlan.shiftsToUpsert,
+    );
     if (!didSave && dataMode === "cloud") {
       setDataWarning(
         shiftRepository.getLastError?.() ??
@@ -273,15 +282,44 @@ export default function ShiftManager() {
       return;
     }
 
-    const nextShifts = shifts.some((item) => item.id === shift.id)
-      ? shifts.map((item) => (item.id === shift.id ? shift : item))
-      : [...shifts, shift];
-    setShifts(nextShifts);
-    setDataWarning(
-      didSave
-        ? ""
-        : "ブラウザにデータを保存できません。ブラウザ設定を確認してください。",
+    const didRemoveLinked =
+      savePlan.shiftIdsToRemove.length === 0 ||
+      (await shiftRepository.removeMany(savePlan.shiftIdsToRemove));
+    const removedIds =
+      didRemoveLinked || dataMode === "local"
+        ? savePlan.shiftIdsToRemove
+        : [];
+    setShifts(
+      applyShiftChanges(shifts, savePlan.shiftsToUpsert, removedIds),
     );
+
+    if (!didRemoveLinked && dataMode === "cloud") {
+      setDataWarning(
+        shiftRepository.getLastError?.() ??
+          "連動した夜勤明けを削除できませんでした。再試行してください。",
+      );
+    } else {
+      setDataWarning(
+        didSave && didRemoveLinked
+          ? ""
+          : "ブラウザにデータを保存できません。ブラウザ設定を確認してください。",
+      );
+    }
+
+    if (didSave && didRemoveLinked) {
+      if (savePlan.addedPostNightDate) {
+        setToolMessage(
+          `${formatLongDate(savePlan.addedPostNightDate)}に夜勤明けを自動登録しました。`,
+        );
+      } else if (savePlan.blockedPostNightDate) {
+        setToolMessage(
+          `${formatLongDate(savePlan.blockedPostNightDate)}は勤務登録済みのため、夜勤明けは追加していません。`,
+        );
+      } else if (savePlan.shiftIdsToRemove.length > 0) {
+        setToolMessage("連動していた翌日の夜勤明けを削除しました。");
+      }
+    }
+
     setSelectedDate(null);
   }
 
@@ -290,7 +328,11 @@ export default function ShiftManager() {
       return;
     }
 
-    const didRemove = await shiftRepository.remove(shiftId);
+    const shiftToDelete = shifts.find((shift) => shift.id === shiftId);
+    const shiftIdsToRemove = shiftToDelete
+      ? planNightShiftDeletion(shifts, shiftToDelete)
+      : [shiftId];
+    const didRemove = await shiftRepository.removeMany(shiftIdsToRemove);
     if (!didRemove && dataMode === "cloud") {
       setDataWarning(
         shiftRepository.getLastError?.() ??
@@ -299,12 +341,16 @@ export default function ShiftManager() {
       return;
     }
 
-    setShifts(shifts.filter((shift) => shift.id !== shiftId));
+    const removedIds = new Set(shiftIdsToRemove);
+    setShifts(shifts.filter((shift) => !removedIds.has(shift.id)));
     setDataWarning(
       didRemove
         ? ""
         : "ブラウザにデータを保存できません。ブラウザ設定を確認してください。",
     );
+    if (didRemove && shiftIdsToRemove.length > 1) {
+      setToolMessage("夜勤と、翌日の夜勤明けを削除しました。");
+    }
     setSelectedDate(null);
   }
 

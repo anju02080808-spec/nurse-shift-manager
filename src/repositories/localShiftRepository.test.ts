@@ -35,6 +35,19 @@ describe("LocalShiftRepository", () => {
     expect(await repository.list()).toEqual([nightShift]);
   });
 
+  it("removes linked shifts together", async () => {
+    const repository = new LocalShiftRepository(memoryStorage());
+    const nightShift = createShiftRecord("2026-08-25", "night");
+    const postNightShift = createShiftRecord("2026-08-26", "postNight");
+    const dayShift = createShiftRecord("2026-08-27", "day");
+
+    await repository.upsertMany([nightShift, postNightShift, dayShift]);
+    expect(
+      await repository.removeMany([nightShift.id, postNightShift.id]),
+    ).toBe(true);
+    expect(await repository.list()).toEqual([dayShift]);
+  });
+
   it("clears all shifts without affecting the repository contract", async () => {
     const repository = new LocalShiftRepository(memoryStorage());
     const shift = createShiftRecord("2026-08-25", "day");

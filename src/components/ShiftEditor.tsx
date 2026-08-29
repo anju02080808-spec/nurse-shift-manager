@@ -153,7 +153,11 @@ export default function ShiftEditor({
               />
             </label>
           </div>
-          {type === "night" && <p className="field-hint">終了時刻が開始時刻より早いため、翌日終了として保存します。</p>}
+          {type === "night" && (
+            <p className="field-hint">
+              翌日終了として保存し、翌日の夜勤明けも自動登録します。
+            </p>
+          )}
 
           <label className="note-field">
             <span>メモ <em>任意</em></span>

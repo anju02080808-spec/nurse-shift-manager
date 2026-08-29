@@ -66,12 +66,20 @@ export class SupabaseShiftRepository implements ShiftRepository {
   }
 
   async remove(shiftId: string): Promise<boolean> {
+    return this.removeMany([shiftId]);
+  }
+
+  async removeMany(shiftIds: string[]): Promise<boolean> {
     this.lastError = null;
+    if (shiftIds.length === 0) {
+      return true;
+    }
+
     try {
       const { error } = await this.client
         .from("shifts")
         .delete()
-        .eq("client_id", shiftId);
+        .in("client_id", shiftIds);
 
       if (error) {
         this.lastError = getCloudError(error.code);

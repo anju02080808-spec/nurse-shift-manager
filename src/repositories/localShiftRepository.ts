@@ -35,8 +35,13 @@ export class LocalShiftRepository implements ShiftRepository {
   }
 
   async remove(shiftId: string): Promise<boolean> {
+    return this.removeMany([shiftId]);
+  }
+
+  async removeMany(shiftIds: string[]): Promise<boolean> {
+    const ids = new Set(shiftIds);
     this.shifts = this.getCachedShifts().filter(
-      (shift) => shift.id !== shiftId,
+      (shift) => !ids.has(shift.id),
     );
     return saveShifts(this.shifts, this.storage);
   }
