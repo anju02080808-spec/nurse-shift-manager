@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import {
+  getSupabasePublicConfig,
+  isGoogleAuthEnabled,
+} from "@/lib/supabase/config";
 
 function jwtWithRole(role: string): string {
   const payload = globalThis.btoa(JSON.stringify({ role }));
@@ -42,5 +45,15 @@ describe("Supabase public configuration", () => {
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: jwtWithRole("service_role"),
       }),
     ).toBeNull();
+  });
+
+  it("enables Google login only when explicitly configured", () => {
+    expect(isGoogleAuthEnabled({})).toBe(false);
+    expect(
+      isGoogleAuthEnabled({ NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: "false" }),
+    ).toBe(false);
+    expect(
+      isGoogleAuthEnabled({ NEXT_PUBLIC_GOOGLE_AUTH_ENABLED: " true " }),
+    ).toBe(true);
   });
 });

@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     if (supabase) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (!error) {
-        destination.searchParams.set("auth", "confirmed");
+        destination.searchParams.set("auth", "success");
         return NextResponse.redirect(destination);
       }
     }

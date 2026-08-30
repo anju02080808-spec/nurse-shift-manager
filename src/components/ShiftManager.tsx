@@ -234,9 +234,9 @@ export default function ShiftManager() {
 
     const timer = window.setTimeout(() => {
       setToolMessage(
-        authResult === "confirmed"
-          ? "メール確認が完了しました。クラウド同期を利用できます。"
-          : "メール確認を完了できませんでした。リンクの期限を確認してください。",
+        authResult === "success" || authResult === "confirmed"
+          ? "ログインが完了しました。クラウド同期を利用できます。"
+          : "ログインを完了できませんでした。もう一度お試しください。",
       );
       window.history.replaceState({}, "", window.location.pathname);
     }, 0);

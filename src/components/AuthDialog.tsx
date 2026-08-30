@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAuthErrorMessage } from "@/lib/authErrors";
+import { isGoogleAuthEnabled } from "@/lib/supabase/config";
 import type { Database } from "@/types/database";
 
 interface AuthDialogProps {
@@ -13,10 +14,12 @@ interface AuthDialogProps {
 type AuthMode = "login" | "signup";
 
 export default function AuthDialog({ client, onClose }: AuthDialogProps) {
+  const googleAuthEnabled = isGoogleAuthEnabled();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -79,6 +82,29 @@ export default function AuthDialog({ client, onClose }: AuthDialogProps) {
     }
   }
 
+  async function handleGoogleSignIn() {
+    setError("");
+    setNotice("");
+    setIsGoogleSubmitting(true);
+
+    try {
+      const { error: authError } = await client.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (authError) {
+        setError(getAuthErrorMessage(authError.code));
+      }
+    } catch {
+      setError(getAuthErrorMessage());
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  }
+
   return (
     <div className="editor-backdrop" role="presentation">
       <section
@@ -124,6 +150,23 @@ export default function AuthDialog({ client, onClose }: AuthDialogProps) {
           </button>
         </div>
 
+        {googleAuthEnabled && (
+          <>
+            <button
+              className="google-auth-button"
+              disabled={isSubmitting || isGoogleSubmitting}
+              onClick={() => void handleGoogleSignIn()}
+              type="button"
+            >
+              <span className="google-auth-mark" aria-hidden="true">G</span>
+              {isGoogleSubmitting ? "Googleへ移動中…" : "Googleで続ける"}
+            </button>
+            <div className="auth-divider" aria-hidden="true">
+              <span>または</span>
+            </div>
+          </>
+        )}
+
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
             <span>メールアドレス</span>
@@ -158,7 +201,7 @@ export default function AuthDialog({ client, onClose }: AuthDialogProps) {
           {notice && <p className="auth-notice" role="status">{notice}</p>}
           <button
             className="primary-button auth-submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleSubmitting}
             type="submit"
           >
             {isSubmitting

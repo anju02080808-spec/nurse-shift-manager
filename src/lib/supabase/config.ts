@@ -5,11 +5,14 @@ export interface SupabasePublicConfig {
 
 type PublicEnvironment = {
   [key: string]: string | undefined;
+  NEXT_PUBLIC_GOOGLE_AUTH_ENABLED?: string;
   NEXT_PUBLIC_SUPABASE_URL?: string;
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?: string;
 };
 
 const publicEnvironment: PublicEnvironment = {
+  NEXT_PUBLIC_GOOGLE_AUTH_ENABLED:
+    process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED,
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -72,4 +75,12 @@ export function getSupabasePublicConfig(
 
 export function hasSupabasePublicConfig(): boolean {
   return getSupabasePublicConfig() !== null;
+}
+
+export function isGoogleAuthEnabled(
+  environment: PublicEnvironment = publicEnvironment,
+): boolean {
+  return (
+    environment.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED?.trim().toLowerCase() === "true"
+  );
 }

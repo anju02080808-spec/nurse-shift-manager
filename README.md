@@ -97,7 +97,8 @@ CSVは表示中の月の勤務を対象に、UTF-8 BOMとCRLF改行を使用し�
 - 1日につき1勤務を基本としています
 - オフライン中のクラウド編集キューと自動再送はありません
 - PWAはインストールと通信状態表示に対応していますが、オフラインでの新規登録・編集には対応していません
-- Googleログイン、リアルタイム同期、複数ユーザー共同編集はありません
+- リアルタイム同期、複数ユーザー共同編集はありません
+- GoogleログインはSupabase側の設定を完了した環境でのみ有効化できます
 - 端末内モードとクラウドモードは別データとして保持されます
 
 ## Supabase開発環境
@@ -112,9 +113,12 @@ cp .env.example .env.local
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=false
 ```
 
 Supabase DashboardのAuthenticationでメール認証を有効にし、Site URLを`http://localhost:3000`、Redirect URLを`http://localhost:3000/auth/callback`に設定します。本番では両方をHTTPSの公開URLへ変更・追加してください。Secret key、legacy `service_role` key、DBパスワードはアプリへ設定しません。
+
+Googleログインを使う場合は、Google Auth PlatformでWeb application用OAuthクライアントを作成し、Google側のAuthorized redirect URIへSupabase DashboardのGoogle Provider画面に表示されるcallback URLを正確に登録します。取得したClient IDとClient SecretはSupabase DashboardのGoogle Provider設定だけへ保存してください。アプリやVercelへClient Secretを登録してはいけません。Supabase側の設定完了後に`NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`として再デプロイすると、「Googleで続ける」が表示されます。
 
 ローカルDBを利用する場合は、Supabase CLIに加えてDocker互換環境が必要です。
 
@@ -129,11 +133,10 @@ DBスキーマ、制約、RLSポリシーは`supabase/migrations`を正本とし
 
 ## Vercelへデプロイする場合
 
-VercelのProject Settings > Environment Variablesへ、`.env.local`と同じ3変数を登録します。`NEXT_PUBLIC_SITE_URL`はVercelの本番URLにします。Supabase側にも同じ本番URLと`/auth/callback`を許可URLとして追加してください。秘密鍵はVercelにも不要です。
+VercelのProject Settings > Environment Variablesへ、`.env.local`と同じ公開変数を登録します。`NEXT_PUBLIC_SITE_URL`はVercelの本番URLにします。Supabase側にも同じ本番URLと`/auth/callback`を許可URLとして追加してください。Google Provider設定が完了するまでは`NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=false`にします。秘密鍵はVercelにも不要です。
 
 ## 今後の構想
 
-- Googleログイン
 - オフライン編集キューと自動再同期
 - クラウドデータのリアルタイム更新
 - 給与・夜勤手当計算

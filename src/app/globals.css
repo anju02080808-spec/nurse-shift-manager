@@ -1296,10 +1296,64 @@ textarea:focus-visible {
   box-shadow: 0 4px 12px rgba(31, 70, 84, 0.08);
 }
 
+.google-auth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 47px;
+  margin-top: 18px;
+  border: 1px solid #d8e5e7;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.google-auth-button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.google-auth-mark {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f3f6fb;
+  color: #4285f4;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  height: 1px;
+  flex: 1;
+  background: #e0e9ea;
+  content: "";
+}
+
 .auth-form {
   display: grid;
   gap: 15px;
   margin-top: 19px;
+}
+
+.auth-divider + .auth-form {
+  margin-top: 15px;
 }
 
 .auth-form label {
