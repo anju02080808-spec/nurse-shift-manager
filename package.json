@@ -13,7 +13,7 @@
     "supabase:test": "supabase test db",
     "supabase:lint": "supabase db lint --level error",
     "supabase:types": "supabase gen types typescript --local",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run"
   },
   "engines": {

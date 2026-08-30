@@ -78,7 +78,7 @@ fnm exec --using 24 npm run typecheck
 fnm exec --using 24 npm test
 ```
 
-GitHub Actionsでも、pushとPull Requestごとに同じlint・型検査・テスト・Webpack buildを実行します。
+`typecheck`はNext.jsのルート型を生成してからTypeScriptを検査します。GitHub Actionsでも、pushとPull Requestごとに同じlint・型検査・テスト・Webpack buildを実行します。
 
 ## build方法
 
