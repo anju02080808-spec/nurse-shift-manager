@@ -2,6 +2,14 @@
 
 看護師がスマートフォンから自分の勤務表を登録・確認できるWebアプリです。未ログイン時はブラウザ内だけに保存する端末内モード、ログイン時はSupabaseへ保存するクラウドモードで動作します。
 
+[公開アプリ](https://nurse-shift-manager.vercel.app/) · [ログイン不要デモ](https://nurse-shift-manager.vercel.app/demo) · [プライバシーポリシー](https://nurse-shift-manager.vercel.app/privacy)
+
+## このアプリで解決したかったこと
+
+不規則な勤務をスマートフォンから少ない操作で記録し、夜勤の日付またぎや翌日の夜勤明けを自然に扱えることを目指しました。UI、勤務ロジック、データ保存を分離し、端末内利用から認証付きクラウド同期へ段階的に拡張できる構成にしています。
+
+ポートフォリオデモはクラウドとlocalStorageのどちらにも書き込みません。サンプルデータをメモリ内だけで操作でき、再読み込みすると初期状態へ戻ります。
+
 ## 主な機能
 
 - 月間カレンダーで勤務の登録・編集・削除
@@ -20,7 +28,21 @@
 - スマートフォンやPCのホーム画面へ追加できるPWA対応
 - iPhone向けホーム画面追加案内とオフライン状態の表示
 - デモ勤務の追加と、確認付きの全勤務削除
+- アカウント登録なしで安全に主要機能を確認できる専用デモ
+- プライバシーポリシー
 - 壊れた保存データや`localStorage`が使えない環境への安全なフォールバック
+
+## 設計のポイント
+
+| 領域 | 方針 |
+| --- | --- |
+| UI | カレンダー、編集、次回勤務、月間集計を責務ごとに分割 |
+| 勤務ロジック | 日付処理、日付またぎ、夜勤明け自動登録をUIから分離 |
+| 保存 | 共通Repositoryインターフェースの背後でlocalStorageとSupabaseを切り替え |
+| クラウド | Supabase AuthとRLSを前提に、本人の勤務だけを操作可能にする |
+| デモ | 専用のインメモリStorageを使い、本番・端末内データから完全分離 |
+| CSV | 文字列生成とブラウザダウンロードを分離し、Excel向けBOMと数式注入対策を実施 |
+| 品質 | Vitest、ESLint、TypeScript、production buildをGitHub Actionsでも継続確認 |
 
 ## 使用技術
 
@@ -56,6 +78,8 @@ fnm exec --using 24 npm run typecheck
 fnm exec --using 24 npm test
 ```
 
+GitHub Actionsでも、pushとPull Requestごとに同じlint・型検査・テスト・Webpack buildを実行します。
+
 ## build方法
 
 通常のNext.js buildはTurbopackを使用します。Codexなど実行環境の制限を避けて確認する場合はWebpackを明示します。
@@ -85,6 +109,10 @@ interface ShiftStorage {
 
 CSVは表示中の月の勤務を対象に、UTF-8 BOMとCRLF改行を使用して出力します。CSV文字列生成とブラウザのダウンロード処理は別モジュールです。
 
+### ポートフォリオデモ
+
+`/demo`は専用のメモリ内Storageを使用します。Supabase、通常版のlocalStorage、既存勤務のいずれにもアクセスせず、勤務の登録・編集・削除、夜勤明け自動登録、集計、CSV出力、テンプレート変更を試せます。ページの再読み込みでサンプル状態へ戻ります。
+
 ### クラウドモード
 
 ログイン中は勤務を`public.shifts`、勤務テンプレートを`public.shift_templates`へ保存します。両テーブルは`auth.users.id`に紐づき、Row Level Security（RLS）により本人の行だけをSELECT・INSERT・UPDATE・DELETEできます。ブラウザにはPublishable keyだけを設定し、Secret key、legacy `service_role` key、DBパスワードは含めません。
@@ -100,6 +128,15 @@ CSVは表示中の月の勤務を対象に、UTF-8 BOMとCRLF改行を使用し�
 - リアルタイム同期、複数ユーザー共同編集はありません
 - GoogleログインはSupabase側の設定を完了した環境でのみ有効化できます
 - 端末内モードとクラウドモードは別データとして保持されます
+- アプリ内からのアカウント削除は未実装で、問い合わせによる対応が必要です
+
+## セキュリティ
+
+- SupabaseのSecret key、legacy `service_role` key、DBパスワードをクライアントへ含めません
+- RLSポリシーと`auth.uid()`により、勤務とテンプレートをユーザー単位で分離します
+- localStorageからクラウドへの移行は確認後に実行し、元データを自動削除しません
+- CSV出力時だけ数式として解釈され得る値を安全化し、元の勤務データは変更しません
+- デモはインメモリで動作し、クラウド・端末内データへ書き込みません
 
 ## Supabase開発環境
 

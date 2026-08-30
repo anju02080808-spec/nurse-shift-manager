@@ -1,11 +1,14 @@
 "use client";
 
+import Link from "next/link";
+
 interface AccountStatusProps {
   authLoading: boolean;
   canMigrate: boolean;
   cloudConfigured: boolean;
   email: string | null;
   isRefreshing: boolean;
+  isDemo: boolean;
   onLogin: () => void;
   onLogout: () => void;
   onMigrate: () => void;
@@ -18,11 +21,27 @@ export default function AccountStatus({
   cloudConfigured,
   email,
   isRefreshing,
+  isDemo,
   onLogin,
   onLogout,
   onMigrate,
   onRefresh,
 }: AccountStatusProps) {
+  if (isDemo) {
+    return (
+      <section className="account-card is-demo">
+        <div className="account-icon is-demo" aria-hidden="true">試</div>
+        <div className="account-copy">
+          <strong>ポートフォリオデモ</strong>
+          <span>サンプルデータはこの画面のメモリ内だけで動作します。</span>
+        </div>
+        <Link className="account-primary" href="/">
+          通常版へ戻る
+        </Link>
+      </section>
+    );
+  }
+
   if (authLoading) {
     return <section className="account-card is-loading">認証状態を確認中…</section>;
   }
@@ -40,9 +59,14 @@ export default function AccountStatus({
           </span>
         </div>
         {cloudConfigured && (
-          <button className="account-primary" onClick={onLogin} type="button">
-            ログイン・新規登録
-          </button>
+          <div className="account-actions">
+            <Link className="account-secondary" href="/demo">
+              デモを試す
+            </Link>
+            <button className="account-primary" onClick={onLogin} type="button">
+              ログイン・新規登録
+            </button>
+          </div>
         )}
       </section>
     );

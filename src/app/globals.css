@@ -49,7 +49,8 @@ button {
 
 button:focus-visible,
 input:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+a:focus-visible {
   outline: 3px solid rgba(25, 141, 134, 0.28);
   outline-offset: 2px;
 }
@@ -336,6 +337,11 @@ textarea:focus-visible {
   background: linear-gradient(110deg, #f7fffd, #fff);
 }
 
+.account-card.is-demo {
+  border-color: #d8d1ee;
+  background: linear-gradient(110deg, #f7f5ff, #fff);
+}
+
 .account-card.is-loading {
   justify-content: center;
   color: var(--ink-soft);
@@ -359,6 +365,11 @@ textarea:focus-visible {
   background: #edf3f6;
   color: var(--navy);
   font-size: 12px;
+}
+
+.account-icon.is-demo {
+  background: var(--purple-light);
+  color: var(--purple);
 }
 
 .account-copy {
@@ -391,11 +402,15 @@ textarea:focus-visible {
 .account-primary,
 .account-secondary,
 .account-logout {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 36px;
   border-radius: 10px;
   padding: 0 12px;
   font-size: 11px;
   font-weight: 800;
+  text-decoration: none;
 }
 
 .account-primary {
@@ -959,14 +974,106 @@ textarea:focus-visible {
 }
 
 .app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
   margin-top: 25px;
   font-size: 11px;
   text-align: center;
 }
 
-.app-footer span {
+.app-footer > span > span {
   padding: 0 5px;
   color: #b1c2c5;
+}
+
+.footer-links {
+  display: inline-flex;
+  gap: 12px;
+}
+
+.footer-links a {
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.legal-shell {
+  width: min(100%, 820px);
+  margin: 0 auto;
+  padding: 44px 28px 64px;
+}
+
+.legal-header {
+  margin-bottom: 24px;
+}
+
+.legal-back {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  margin-bottom: 30px;
+  color: var(--teal);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.legal-header h1 {
+  margin: 0;
+  color: var(--navy);
+  font-size: clamp(28px, 6vw, 42px);
+  letter-spacing: -0.04em;
+}
+
+.legal-header > p:last-child {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.legal-card {
+  display: grid;
+  gap: 28px;
+  border: 1px solid rgba(214, 227, 231, 0.9);
+  border-radius: 22px;
+  padding: 34px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.legal-card section {
+  display: grid;
+  gap: 10px;
+}
+
+.legal-card h2,
+.legal-card p,
+.legal-card ul {
+  margin: 0;
+}
+
+.legal-card h2 {
+  color: var(--navy);
+  font-size: 18px;
+}
+
+.legal-card p,
+.legal-card li {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.legal-card ul {
+  padding-left: 1.4em;
+}
+
+.legal-card a {
+  color: var(--teal);
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .editor-backdrop {
@@ -1599,6 +1706,22 @@ textarea:focus-visible {
     max-height: 94vh;
     border-radius: 23px 23px 0 0;
     padding: 12px 18px 22px;
+  }
+
+  .app-footer {
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .legal-shell {
+    padding: 28px 14px 44px;
+  }
+
+  .legal-card {
+    gap: 24px;
+    border-radius: 18px;
+    padding: 24px 19px;
   }
 }
 

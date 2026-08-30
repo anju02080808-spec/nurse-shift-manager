@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -32,6 +33,7 @@ import {
   planNightShiftDeletion,
   planNightShiftSave,
 } from "@/lib/nightShiftAutomation";
+import { createPortfolioDemoStorage } from "@/lib/portfolioDemo";
 import { createDefaultShiftTemplates } from "@/lib/shiftTemplates";
 import { createClient as createSupabaseClient } from "@/lib/supabase/client";
 import {
@@ -54,14 +56,25 @@ import { SupabaseShiftTemplateRepository } from "@/repositories/supabaseShiftTem
 import type { ShiftRecord } from "@/types/shift";
 import type { ShiftTemplates } from "@/types/shiftTemplate";
 
-type DataMode = "local" | "cloud";
+type DataMode = "local" | "cloud" | "demo";
 
-export default function ShiftManager() {
-  const [localShiftRepository] = useState(() => new LocalShiftRepository());
-  const [localShiftTemplateRepository] = useState(
-    () => new LocalShiftTemplateRepository(),
+interface ShiftManagerProps {
+  demoMode?: boolean;
+}
+
+export default function ShiftManager({ demoMode = false }: ShiftManagerProps) {
+  const [demoStorage] = useState(() =>
+    demoMode ? createPortfolioDemoStorage() : null,
   );
-  const [supabaseClient] = useState(createSupabaseClient);
+  const [localShiftRepository] = useState(
+    () => new LocalShiftRepository(demoStorage ?? undefined),
+  );
+  const [localShiftTemplateRepository] = useState(
+    () => new LocalShiftTemplateRepository(demoStorage ?? undefined),
+  );
+  const [supabaseClient] = useState(() =>
+    demoMode ? null : createSupabaseClient(),
+  );
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(() => Boolean(supabaseClient));
   const [isClientReady, setIsClientReady] = useState(false);
@@ -102,8 +115,9 @@ export default function ShiftManager() {
         : null,
     [supabaseClient, userId],
   );
-  const dataMode: DataMode =
-    userId && cloudShiftRepository && cloudShiftTemplateRepository
+  const dataMode: DataMode = demoMode
+    ? "demo"
+    : userId && cloudShiftRepository && cloudShiftTemplateRepository
       ? "cloud"
       : "local";
   const shiftRepository: ShiftRepository =
@@ -552,7 +566,7 @@ export default function ShiftManager() {
             <h1>勤務表</h1>
           </div>
         </div>
-        <span className="phase-badge">PHASE 2</span>
+        <span className="phase-badge">{demoMode ? "DEMO" : "PHASE 2"}</span>
       </header>
 
       <AccountStatus
@@ -561,6 +575,7 @@ export default function ShiftManager() {
         cloudConfigured={isClientReady && Boolean(supabaseClient)}
         email={user?.email ?? null}
         isRefreshing={isRefreshing}
+        isDemo={demoMode}
         onLogin={() => setIsAuthOpen(true)}
         onLogout={() => void handleLogout()}
         onMigrate={() => setIsMigrationOpen(true)}
@@ -640,7 +655,9 @@ export default function ShiftManager() {
           <p>
             {dataMode === "cloud"
               ? "ログイン中のアカウントへ安全に保存しています。"
-              : "この端末のブラウザに保存しています。"}
+              : dataMode === "demo"
+                ? "デモ中の変更はこの画面だけに反映され、リロードすると初期化されます。"
+                : "この端末のブラウザに保存しています。"}
           </p>
           {toolMessage && <p className="tool-message" role="status">{toolMessage}</p>}
         </div>
@@ -670,8 +687,20 @@ export default function ShiftManager() {
       </section>
 
       <footer className="app-footer">
-        Nurse Shift Manager <span>·</span>{" "}
-        {dataMode === "cloud" ? "Supabase cloud mode" : "localStorage mode"}
+        <span>
+          Nurse Shift Manager <span>·</span>{" "}
+          {dataMode === "cloud"
+            ? "Supabase cloud mode"
+            : dataMode === "demo"
+              ? "private demo mode"
+              : "localStorage mode"}
+        </span>
+        <span className="footer-links">
+          <Link href={demoMode ? "/" : "/demo"}>
+            {demoMode ? "通常版" : "デモ版"}
+          </Link>
+          <Link href="/privacy">プライバシー</Link>
+        </span>
       </footer>
 
       {selectedDate && (

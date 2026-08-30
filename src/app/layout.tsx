@@ -13,10 +13,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://nurse-shift-manager.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   applicationName: "Nurse Shift Manager",
   title: "勤務表 | Nurse Shift Manager",
   description: "看護師のためのシンプルな勤務管理アプリ",
+  openGraph: {
+    type: "website",
+    locale: "ja_JP",
+    title: "勤務表 | Nurse Shift Manager",
+    description: "看護師のためのシンプルな勤務管理アプリ",
+  },
+  twitter: {
+    card: "summary",
+    title: "勤務表 | Nurse Shift Manager",
+    description: "看護師のためのシンプルな勤務管理アプリ",
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
