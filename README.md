@@ -4,6 +4,20 @@
 
 [公開アプリ](https://nurse-shift-manager.vercel.app/) · [ログイン不要デモ](https://nurse-shift-manager.vercel.app/demo) · [プライバシーポリシー](https://nurse-shift-manager.vercel.app/privacy)
 
+## 画面
+
+### 月間勤務表
+
+[![ログイン不要デモの月間勤務表](public/screenshots/portfolio-demo-overview.jpg)](https://nurse-shift-manager.vercel.app/demo)
+
+勤務区分を色分けし、夜勤から翌日の夜勤明けまで1か月の流れをひと目で確認できます。画像をクリックすると、実際のデモを操作できます。
+
+### 勤務登録・編集
+
+![夜勤の勤務編集画面](public/screenshots/portfolio-shift-editor.jpg)
+
+勤務区分を選ぶと標準時刻を自動入力します。夜勤は翌日終了として扱い、翌日の夜勤明けも自動登録します。
+
 ## このアプリで解決したかったこと
 
 不規則な勤務をスマートフォンから少ない操作で記録し、夜勤の日付またぎや翌日の夜勤明けを自然に扱えることを目指しました。UI、勤務ロジック、データ保存を分離し、端末内利用から認証付きクラウド同期へ段階的に拡張できる構成にしています。
